@@ -1,0 +1,133 @@
+{
+  "name": "Viral Shorts Generator (YouTube to Script)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-node",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "video-url",
+              "name": "YouTube Video Url",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "id": "set-variables",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://api.dumpling.ai/transcribe",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "videoUrl",
+              "value": "={{ $json['YouTube Video Url'] }}"
+            },
+            {
+              "name": "includeTimestamps",
+              "value": "={{false}}"
+            }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "get-transcript",
+      "name": "Get YouTube Transcript",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ASc5gIQaW1c63ZhO",
+          "name": "Dumpling AI Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an expert social media content creator specializing in viral YouTube Shorts, TikToks, and Instagram Reels.\nI will provide you with a transcript of a video. Your task is to extract the most motivational, educational, and high-impact segment from it.\n\nCreate a script for a 30-60 second video with the following structure:\n1. **Hook (0-3s):** A shocking statement or question to grab attention immediately.\n2. **Body:** The core value or lesson, condensed into punchy, short sentences.\n3. **CTA (Call to Action):** Tell them to subscribe/follow for more.\n\nOutput format (JSON):\n{\n  \"title\": \"Catchy Title\",\n  \"script\": \"The spoken words\",\n  \"visual_idea\": \"Brief description of what should be shown on screen\"\n}"
+            },
+            {
+              "role": "user",
+              "content": "Here is the transcript:\n{{ $json.transcript }}"
+            }
+          ]
+        },
+        "jsonOutput": true
+      },
+      "id": "generate-script",
+      "name": "Generate Viral Script",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [660, 0],
+      "credentials": {
+        "openAiApi": {
+          "id": "fdhWALG84tBLgSZT",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Get YouTube Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get YouTube Transcript": {
+      "main": [
+        [
+          {
+            "node": "Generate Viral Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
